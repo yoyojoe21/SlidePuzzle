@@ -4,19 +4,35 @@ using UnityEngine;
 
 public class DragObject : MonoBehaviour
 {
-
-
+    
     private Vector3 offset;                     // used for translating screen coords to world coords
     private Vector3 screenPoint;
 
     public enum Direction { x_axis, z_axis };       // creates a drop-down menu in the object inspector to switch between x and z dragging; sets z to default.
     public Direction dropdown = Direction.z_axis;
 
-    const float MIN_X = -1.0f;                      // outer limits of the board in my game world
-    const float MAX_X = 1.0f;
+    public float MIN_X = -4.0f;                      // outer limits of the board in my game world
+    public float MAX_X = 4.0f;
 
-    const float MIN_Z = -1.5f;
-    const float MAX_Z = 0.5f;
+    public float MIN_Z = -4.0f;
+    public float MAX_Z = 4.0f;
+
+
+    float min_x;                      // outer limits of the board in my game world
+    float max_x;
+
+    float min_z;
+    float max_z;
+
+    float current_x = 0;
+    float past_x = 0;
+
+    float current_z = 0;
+    float past_z = 0;
+
+
+    // outer limits of the board in my game world
+
 
     private bool dragging = true;       // enables dragging and sets solved to false
     private bool solved = false;
@@ -24,7 +40,24 @@ public class DragObject : MonoBehaviour
 
 
 
+    void Start()
+    {
+        min_x = MIN_X;
+        max_z = MAX_Z;
+        min_z = MIN_Z;
+        max_x = MAX_X;
+    }
 
+    // Update is called once per frame
+    void Update()
+    {
+        past_x = current_x;
+        past_z = current_z;
+
+        current_x = transform.position.x;
+        current_z = transform.position.z;
+
+    }
 
     void OnMouseDown()
     {
@@ -63,7 +96,7 @@ public class DragObject : MonoBehaviour
             {
                 curPosition.z = transform.position.z;
 
-               
+
 
                 if (curPosition.x < MIN_X)          // keeps cubes within board area
                     curPosition.x = MIN_X;
@@ -78,25 +111,23 @@ public class DragObject : MonoBehaviour
             transform.position = curPosition;
 
         }
-    }        
-    
-
-
-
-
-
-
+    }
 
 
     void OnMouseUp()                    // since this is on a grid, the center of a 2x1 vertical cube ends up half a space off, so we need to correct this by rounding.
     {
 
+        MIN_X = min_x;
+        MAX_Z = max_z;
+        MIN_Z = min_z;
+        MAX_X = max_x;
+
         if (dropdown == Direction.z_axis)
         {
             float curZ = this.transform.position.z;    // get current z position, round that to nearest int, check if its closer to +0.5 or -0.5 
             float roundedZ = Mathf.Round(curZ);
-            float upper = roundedZ + 0.5f;
-            float lower = roundedZ - 0.5f;
+            float upper = roundedZ;
+            float lower = roundedZ;
 
             if (Mathf.Abs(upper - curZ) < Mathf.Abs(lower - curZ))
             {
@@ -118,14 +149,37 @@ public class DragObject : MonoBehaviour
 
 
 
-
-
-
-
-
-
     void OnCollisionEnter(Collision col)
     {
+        if (dropdown == Direction.x_axis)       // for some reason z and x are reversed but it works
+        {
+            if (past_x > current_x)
+            {
+                MIN_X = Mathf.Round(current_x);
+            }
+
+            if (past_x < current_x)
+            {
+                MAX_X = Mathf.Round(current_x);
+            }
+        }
+
+
+
+        if (dropdown == Direction.z_axis)
+        {
+            if (past_z > current_z)
+            {
+                MIN_Z = Mathf.Round(current_z);
+            }
+
+            if (past_z < current_z)
+            {
+                MAX_Z = Mathf.Round(current_z);
+            }
+        }
+
+        /*
         if (col.gameObject.tag == "Cube")   // if your cube hits another cube, disable the ability to drag.
         {
             dragging = false;
@@ -134,6 +188,6 @@ public class DragObject : MonoBehaviour
         if (col.gameObject.tag == "Exit")   // if the target cube hits the exit square, set solved to true so the cube can slide out of the puzzle area.
         {
             solved = true;
-        }
+        }*/
     }
 }
